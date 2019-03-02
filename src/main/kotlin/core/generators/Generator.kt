@@ -1,12 +1,13 @@
-package core
+package core.generators
 
 import java.util.*
+import kotlin.math.max
 
-abstract class Generator {
+abstract class Generator(seed: Long?) {
 
     protected val randomGenerator: Random
 
-    constructor(seed: Long?) {
+    init {
         if (seed != null) {
             this.randomGenerator = Random(seed)
         } else {
@@ -19,7 +20,7 @@ abstract class Generator {
 class DiscreteGenerator(minValue: Int, maxValue: Int, seed: Long? = null): Generator(seed) {
 
     val min = minValue
-    val max: Int = maxValue
+    val max = maxValue
 
     fun generate(): Int {
         return randomGenerator.nextInt(max - min) + min
@@ -33,7 +34,7 @@ class ContinuosGenerator(minValue: Double = 0.0, maxValue: Double = 1.0, seed: L
     val max = maxValue
 
     fun generate(): Double {
-        return min + (max - min) * randomGenerator.nextDouble()
+        return min + ((max - min) * randomGenerator.nextDouble())
     }
 
 }
