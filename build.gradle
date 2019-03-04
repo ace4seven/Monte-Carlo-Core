@@ -38,7 +38,7 @@ dependencies {
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
 }
 
-mainClassName = "MyApp"
+mainClassName = "MCApp"
 
 jar {
     manifest {
