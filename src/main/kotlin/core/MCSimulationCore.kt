@@ -16,7 +16,7 @@ interface MCSimulationCoreDelegate {
     fun clear()
 }
 
-class MCSimulationCore(var replication: Long, val delimeter: Double): MCSimulationCoreDelegate {
+class MCSimulationCore(var replication: Long, var delimeter: Double): MCSimulationCoreDelegate {
 
     private var observers = arrayListOf<MCSimulationCoreObserver>()
     private var seedGenerator: Random
@@ -80,8 +80,8 @@ class MCSimulationCore(var replication: Long, val delimeter: Double): MCSimulati
     private fun monteCarlo() {
         val self = this
 
-        val thread = object: Thread(){
-            override fun run(){
+        val thread = object: Thread() {
+            override fun run() {
                 while(currentReplication < replication && simulationInProgress ) {
                     currentReplication += 1
 
@@ -101,7 +101,7 @@ class MCSimulationCore(var replication: Long, val delimeter: Double): MCSimulati
                     roadAFHDE.updateData(currentReplication, result)
                     if (result < Constants.timeBorder) { roadAFHDE.incGoodTry() }
 
-                    if ((currentReplication.toDouble() / replication.toDouble()) > Constants.balast) {
+                    if ((currentReplication.toDouble() / replication.toDouble()) > Constants.balast * delimeter) {
                         if(jumpIndex > jumpDrawOnChart) {
                             observers.forEach {
                                 it.refresh(self)
@@ -113,11 +113,9 @@ class MCSimulationCore(var replication: Long, val delimeter: Double): MCSimulati
                         }
                     }
                 }
-
                 testResults()
             }
         }
-
         thread.start()
     }
 

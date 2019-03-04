@@ -56,6 +56,7 @@ class AppController:  Controller(), MCSimulationCoreObserver {
     fun startSimilation() {
         if (replicationCount == null) return
         mc.replication = replicationCount!!
+        mc.delimeter = skipFactor!!
         simulationInProgress = true
         mc.start()
     }

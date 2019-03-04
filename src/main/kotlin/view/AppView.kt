@@ -86,7 +86,7 @@ class AppView : View("Monte Carlo simulácia") {
                     }
                 }
 
-                lineChart = linechart("Graf", xAxis, yAxis) {
+                lineChart = linechart("Priebeh simulácie Monte Carlo", xAxis, yAxis) {
                     createSymbols = false
                     isLegendVisible = false
                     prefHeight = 600.0
