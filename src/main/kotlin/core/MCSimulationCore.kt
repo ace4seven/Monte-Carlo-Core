@@ -1,10 +1,10 @@
 package core
 
+import com.sun.javafx.tools.ant.Platform
 import common.Constants
 import model.DataEntry
 import model.RoadType
 import java.util.*
-import kotlin.reflect.jvm.internal.impl.load.java.Constant
 
 interface MCSimulationCoreObserver {
     fun refresh(core: MCSimulationCore)
@@ -16,20 +16,25 @@ interface MCSimulationCoreDelegate {
     fun clear()
 }
 
-class MCSimulationCore(val replication: Long, val delimeter: Double): MCSimulationCoreDelegate {
+class MCSimulationCore(var replication: Long, val delimeter: Double): MCSimulationCoreDelegate {
 
     private var observers = arrayListOf<MCSimulationCoreObserver>()
     private var seedGenerator: Random
 
-    private var currentReplication: Int = 0
+    var currentReplication: Int = 0
     private var simulationInProgress: Boolean = false
 
     private var eventManager: EventManager
 
-    private var roadAFHDE: DataEntry = DataEntry(RoadType.AFHDE, replication)
-    private var roadAFGE: DataEntry = DataEntry(RoadType.AFGE, replication)
-    private var roadAFHCDE: DataEntry = DataEntry(RoadType.AFHCDE, replication)
-    private var roadABCDE: DataEntry = DataEntry(RoadType.ABCDE, replication)
+    var roadAFHDE: DataEntry = DataEntry(RoadType.AFHDE)
+    var roadAFGE: DataEntry = DataEntry(RoadType.AFGE)
+    var roadAFHCDE: DataEntry = DataEntry(RoadType.AFHCDE)
+    var roadABCDE: DataEntry = DataEntry(RoadType.ABCDE)
+
+    var jumpDrawOnChart: Int = 0
+    var jumpIndex: Int = 0
+
+    var roadForGraph: RoadType = RoadType.ABCDE
 
     init {
         this.seedGenerator  = Random()
@@ -37,6 +42,7 @@ class MCSimulationCore(val replication: Long, val delimeter: Double): MCSimulati
     }
 
     override fun start() {
+        jumpDrawOnChart = (replication / Constants.maxChartPoints).toInt()
         simulationInProgress = true
         monteCarlo()
     }
@@ -47,7 +53,16 @@ class MCSimulationCore(val replication: Long, val delimeter: Double): MCSimulati
     }
 
     override fun clear() {
+        roadAFHDE = DataEntry(RoadType.AFHDE)
+        roadAFGE = DataEntry(RoadType.AFGE)
+        roadAFHCDE = DataEntry(RoadType.AFHCDE)
+        roadABCDE = DataEntry(RoadType.ABCDE)
 
+        jumpDrawOnChart = 0
+        jumpIndex = 0
+
+        currentReplication = 0
+        simulationInProgress = false
     }
 
 
@@ -63,26 +78,47 @@ class MCSimulationCore(val replication: Long, val delimeter: Double): MCSimulati
     }
 
     private fun monteCarlo() {
-        while(currentReplication < replication && simulationInProgress ) {
-            currentReplication += 1
+        val self = this
 
-            var result = eventManager.traceABCDE()
-            roadABCDE.updateData(currentReplication, result)
-            if (result < Constants.timeBorder) { roadABCDE.incGoodTry() }
+        val thread = object: Thread(){
+            override fun run(){
+                while(currentReplication < replication && simulationInProgress ) {
+                    currentReplication += 1
 
-            result = eventManager.traceAFGE()
-            roadAFGE.updateData(currentReplication, result)
-            if (result < Constants.timeBorder) { roadAFGE.incGoodTry() }
+                    var result = eventManager.traceABCDE()
+                    roadABCDE.updateData(currentReplication, result)
+                    if (result < Constants.timeBorder) { roadABCDE.incGoodTry() }
 
-            result = eventManager.traceAFHCDE()
-            roadAFHCDE.updateData(currentReplication, result)
-            if (result < Constants.timeBorder) { roadAFHCDE.incGoodTry() }
+                    result = eventManager.traceAFGE()
+                    roadAFGE.updateData(currentReplication, result)
+                    if (result < Constants.timeBorder) { roadAFGE.incGoodTry() }
 
-            result = eventManager.traceAFHDE()
-            roadAFHDE.updateData(currentReplication, result)
-            if (result < Constants.timeBorder) { roadAFHDE.incGoodTry() }
+                    result = eventManager.traceAFHCDE()
+                    roadAFHCDE.updateData(currentReplication, result)
+                    if (result < Constants.timeBorder) { roadAFHCDE.incGoodTry() }
+
+                    result = eventManager.traceAFHDE()
+                    roadAFHDE.updateData(currentReplication, result)
+                    if (result < Constants.timeBorder) { roadAFHDE.incGoodTry() }
+
+                    if ((currentReplication.toDouble() / replication.toDouble()) > Constants.balast) {
+                        if(jumpIndex > jumpDrawOnChart) {
+                            observers.forEach {
+                                it.refresh(self)
+                            }
+                            jumpIndex = 0
+                            Thread.sleep(1)
+                        } else {
+                            jumpIndex += 1
+                        }
+                    }
+                }
+
+                testResults()
+            }
         }
 
-        testResults()
+        thread.start()
     }
+
 }

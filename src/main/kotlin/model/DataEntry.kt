@@ -1,10 +1,19 @@
 package model
 
 enum class RoadType {
-    ABCDE, AFHCDE, AFHDE, AFGE
+    ABCDE, AFHCDE, AFHDE, AFGE;
+
+    fun title(): String {
+        when(this) {
+            RoadType.ABCDE -> return "Trasa A->B->C->D->E"
+            RoadType.AFHCDE -> return "Trasa A->F->H->C->D->E"
+            RoadType.AFGE -> return "Trasa A->F->G->E"
+            RoadType.AFHDE -> return "Trasa A->F->H->D->E"
+        }
+    }
 }
 
-data class DataEntry(val type: RoadType, val replications: Long) {
+data class DataEntry(val type: RoadType) {
 
     private var goodTry: Int = 0
     private var minutesSum: Double = 0.0
@@ -24,16 +33,7 @@ data class DataEntry(val type: RoadType, val replications: Long) {
     }
 
     fun probability(): Double {
-        return goodTry / replications.toDouble()
-    }
-
-    fun title(): String {
-        when(type) {
-            RoadType.ABCDE -> return "Trasa A->B->C->DE"
-            RoadType.AFHCDE -> return "Trasa A->F->H->C->DE"
-            RoadType.AFGE -> return "Trasa A->F->G->E"
-            RoadType.AFHDE -> return "Trasa A->F->H->D->E"
-        }
+        return goodTry.toDouble() / currentReplication.toDouble()
     }
 
 }

@@ -1,3 +1,3 @@
 import tornadofx.*
 
-class MyApp: App(MainView::class, Styles::class)
+class MCApp: App(AppView::class, Styles::class)
